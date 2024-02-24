@@ -5,14 +5,14 @@ locals {
 resource "kubernetes_secret" "mysql_secret" {
   metadata {
     labels = {
-      "app.kubernetes.io/name"          = "mysql-secret"
-      "app.kubernetes.io/version"       = "0.1"
-      "app.kubernetes.io/component"     = "secret"
-      "app.kubernetes.io/part-of"       = "petclinic"
-      "app.kubernetes.io/managed-by"    = "terraform"
+      "app.kubernetes.io/name"       = "mysql"
+      "app.kubernetes.io/version"    = "0.1"
+      "app.kubernetes.io/component"  = "secret"
+      "app.kubernetes.io/part-of"    = "petclinic"
+      "app.kubernetes.io/managed-by" = "terraform"
     }
 
-    name = "mysql-secret"
+    name = "ph-clinic-mysql-secret"
   }
 
   data = {
@@ -25,24 +25,24 @@ resource "kubernetes_secret" "mysql_secret" {
 resource "kubernetes_stateful_set" "mysql_8_0" {
   metadata {
     labels = {
-      "app.kubernetes.io/name"          = "mysql"
-      "app.kubernetes.io/version"       = "8.0"
-      "app.kubernetes.io/component"     = "stateful-set"
-      "app.kubernetes.io/part-of"       = "petclinic"
-      "app.kubernetes.io/managed-by"    = "terraform"
+      "app.kubernetes.io/name"       = "mysql"
+      "app.kubernetes.io/version"    = "8.0"
+      "app.kubernetes.io/component"  = "stateful-set"
+      "app.kubernetes.io/part-of"    = "petclinic"
+      "app.kubernetes.io/managed-by" = "terraform"
     }
 
-    name = "ph-clinic-mysql"
+    name = "ph-clinic-mysql-stateful-set"
   }
 
   spec {
-    replicas               = 1
+    replicas = 1
 
     selector {
       match_labels = {
-        "app.kubernetes.io/name"          = "mysql"
-        "app.kubernetes.io/instance"      = "mysql"
-        "app.kubernetes.io/component"     = "database"
+        "app.kubernetes.io/name"      = "mysql"
+        "app.kubernetes.io/instance"  = "mysql"
+        "app.kubernetes.io/component" = "database"
       }
     }
 
@@ -51,12 +51,12 @@ resource "kubernetes_stateful_set" "mysql_8_0" {
     template {
       metadata {
         labels = {
-          "app.kubernetes.io/name"          = "mysql"
-          "app.kubernetes.io/instance"      = "mysql"
-          "app.kubernetes.io/version"       = "8.0"
-          "app.kubernetes.io/component"     = "database"
-          "app.kubernetes.io/part-of"       = "petclinic"
-          "app.kubernetes.io/managed-by"    = "terraform"
+          "app.kubernetes.io/name"       = "mysql"
+          "app.kubernetes.io/instance"   = "mysql"
+          "app.kubernetes.io/version"    = "8.0"
+          "app.kubernetes.io/component"  = "database"
+          "app.kubernetes.io/part-of"    = "petclinic"
+          "app.kubernetes.io/managed-by" = "terraform"
         }
 
         annotations = {}
@@ -70,28 +70,28 @@ resource "kubernetes_stateful_set" "mysql_8_0" {
 
           env {
             name = "MYSQL_ROOT_PASSWORD"
-            
+
             value_from {
               secret_key_ref {
-                name = "mysql-secret"
-                key = "password"  
-              }  
+                name = "ph-clinic-mysql-secret"
+                key  = "password"
+              }
             }
           }
 
           env {
-            name = "MYSQL_DATABASE"
+            name  = "MYSQL_DATABASE"
             value = "petclinic"
           }
 
           port {
-            name = "mysql"
+            name           = "mysql"
             container_port = 3306
-            protocol = "TCP"
+            protocol       = "TCP"
           }
 
           volume_mount {
-            name       = "data"
+            name       = "ph-clinic-mysql-data"
             mount_path = "/var/lib/mysql"
           }
         }
@@ -100,7 +100,7 @@ resource "kubernetes_stateful_set" "mysql_8_0" {
 
     volume_claim_template {
       metadata {
-        name = "data"
+        name = "ph-clinic-mysql-data"
       }
 
       spec {

@@ -24,3 +24,29 @@ module "vpc" {
     "kubernetes.io/role/internal-elb"             = 1
   }
 }
+
+module "ecr" {
+  source  = "terraform-aws-modules/ecr/aws"
+  version = "1.6.0"
+
+  repository_name = "ph-petclinic-common-ecr-1"
+
+  repository_read_write_access_arns = []
+  repository_lifecycle_policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1,
+        description  = "Keep last 5 images",
+        selection = {
+          tagStatus     = "tagged",
+          tagPrefixList = ["v"],
+          countType     = "imageCountMoreThan",
+          countNumber   = 5
+        },
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}

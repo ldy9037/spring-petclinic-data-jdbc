@@ -46,7 +46,7 @@ resource "kubernetes_stateful_set" "mysql_8_0" {
       }
     }
 
-    service_name = "mysql"
+    service_name = "ph-clinic-mysql-service"
 
     template {
       metadata {
@@ -114,5 +114,32 @@ resource "kubernetes_stateful_set" "mysql_8_0" {
         }
       }
     }
+  }
+}
+
+
+resource "kubernetes_service" "mysql_service" {
+  metadata {
+    labels = {
+      "app.kubernetes.io/name"          = "mysql"
+      "app.kubernetes.io/instance"      = "mysql"
+      "app.kubernetes.io/version"       = "0.1"
+      "app.kubernetes.io/component"     = "service"
+      "app.kubernetes.io/part-of"       = "petclinic"
+      "app.kubernetes.io/managed-by"    = "terraform"
+    }
+
+    name = "ph-clinic-mysql-service"
+  }
+  spec {
+    selector = {
+      "app.kubernetes.io/name" = kubernetes_stateful_set.mysql_8_0.spec.0.template.0.metadata.0.labels["app.kubernetes.io/name"]
+      "app.kubernetes.io/component"  = kubernetes_stateful_set.mysql_8_0.spec.0.template.0.metadata.0.labels["app.kubernetes.io/component"]
+    }
+
+    port {
+      port        = 3306
+    }
+    cluster_ip = "None"
   }
 }

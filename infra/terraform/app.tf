@@ -48,6 +48,30 @@ resource "kubernetes_deployment" "app_deployment" {
             initial_delay_seconds = 30
             period_seconds        = 5
           }
+
+          volume_mount {
+            name = "ph-petclinic-log-volume"
+            mount_path = "/var/log/container"
+          }
+        }
+
+        container {
+          name = "log-fetcher"
+          image = "public.ecr.aws/docker/library/busybox:1.35.0"
+          tty = true
+          args = [ "/bin/bash", "-c", "'sleep 60 && tail -n+1 -f /logs/app.log'" ]
+
+          volume_mount {
+            name = "ph-petclinic-log-volume"
+            mount_path = "/logs"
+          }
+        } 
+
+        volume {
+          name = "ph-petclinic-log-volume"
+          empty_dir {
+            
+          }
         }
       }
     }

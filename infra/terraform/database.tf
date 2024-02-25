@@ -16,13 +16,13 @@ resource "kubernetes_secret" "mysql_secret" {
   }
 
   data = {
-    password = base64encode(local.mysql_secret.password)
+    password = local.mysql_secret.password
   }
 
   type = "kubernetes.io/basic-auth"
 }
 
-resource "kubernetes_stateful_set" "mysql_8_0" {
+resource "kubernetes_stateful_set" "mysql_stateful_set" {
   metadata {
     labels = {
       "app.kubernetes.io/name"       = "mysql"
@@ -84,6 +84,22 @@ resource "kubernetes_stateful_set" "mysql_8_0" {
             value = "petclinic"
           }
 
+          env {
+            name = "MYSQL_USER"
+            value = "petclinic"
+          }
+
+          env {
+            name = "MYSQL_PASSWORD"
+
+            value_from {
+              secret_key_ref {
+                name = "ph-clinic-mysql-secret"
+                key  = "password"
+              }
+            }
+          }
+
           port {
             name           = "mysql"
             container_port = 3306
@@ -133,8 +149,8 @@ resource "kubernetes_service" "mysql_service" {
   }
   spec {
     selector = {
-      "app.kubernetes.io/name" = kubernetes_stateful_set.mysql_8_0.spec.0.template.0.metadata.0.labels["app.kubernetes.io/name"]
-      "app.kubernetes.io/component"  = kubernetes_stateful_set.mysql_8_0.spec.0.template.0.metadata.0.labels["app.kubernetes.io/component"]
+      "app.kubernetes.io/name" = kubernetes_stateful_set.mysql_stateful_set.spec.0.template.0.metadata.0.labels["app.kubernetes.io/name"]
+      "app.kubernetes.io/component"  = kubernetes_stateful_set.mysql_stateful_set.spec.0.template.0.metadata.0.labels["app.kubernetes.io/component"]
     }
 
     port {

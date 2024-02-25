@@ -31,7 +31,7 @@ module "ecr" {
 
   repository_name = "ph-petclinic-common-ecr-1"
 
-  repository_read_write_access_arns = []
+  repository_read_write_access_arns = ["arn:aws:iam::901371017570:user/ldy"]
   repository_lifecycle_policy = jsonencode({
     rules = [
       {

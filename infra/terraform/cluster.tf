@@ -1,5 +1,6 @@
 locals {
   cluster_name = "ph-petclinic-eks-${random_string.suffix.result}"
+  lb_controller_service_account_name = "aws-load-balancer-controller"
 }
 
 data "aws_eks_cluster_auth" "main" {
@@ -74,4 +75,31 @@ resource "aws_eks_addon" "ebs-csi" {
     "eks_addon" = "ebs-csi"
     "terraform" = "true"
   }
+}
+
+module "lb_controller_role" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "4.7.0"
+  
+  create_role = true
+  role_name        = "AmazonEKSTFALBRole-${module.eks.cluster_name}"
+  provider_url = module.eks.oidc_provider
+  role_policy_arns             = [aws_iam_policy.controller.arn]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:${local.lb_controller_service_account_name}"]
+}
+
+data "http" "ingress_controller_policy_json" {
+  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.7.0/docs/install/iam_policy.json"
+}
+
+resource "aws_iam_policy" "controller" {
+  name_prefix = "AmazonLoadBalancerControllerPolicy"
+  policy      = data.http.ingress_controller_policy_json.response_body
+}
+
+resource "aws_iam_role_policy_attachment" "additional" {
+  for_each = module.eks.eks_managed_node_groups
+
+  policy_arn = aws_iam_policy.controller.arn
+  role       = each.value.iam_role_name
 }

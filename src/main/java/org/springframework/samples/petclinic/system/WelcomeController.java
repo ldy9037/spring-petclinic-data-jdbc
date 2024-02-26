@@ -15,8 +15,10 @@
  */
 package org.springframework.samples.petclinic.system;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+
 
 @Controller
 class WelcomeController {
@@ -25,4 +27,10 @@ class WelcomeController {
 	public String welcome() {
 		return "welcome";
 	}
+
+	@GetMapping("/healthcheck")
+	public ResponseEntity<Object> healthcheck() {
+		return ResponseEntity.ok().build();
+	}
+	
 }

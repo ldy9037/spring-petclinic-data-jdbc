@@ -29,11 +29,9 @@ module "eks" {
 
   eks_managed_node_groups = {
     one = {
-      name = "node-gourp-1"
+      name = "ph-petclinic-ng-1"
 
       instance_types = ["t3.medium"]
-
-      disk_size = 50
       
       min_size     = 1
       max_size     = 3
@@ -41,11 +39,9 @@ module "eks" {
     }
 
     two = {
-      name = "node-gourp-2"
+      name = "ph-petclinic-ng-2"
 
       instance_types = ["t3.medium"]
-
-      disk_size = 50
 
       min_size     = 1
       max_size     = 2

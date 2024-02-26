@@ -34,45 +34,30 @@ resource "kubernetes_deployment" "app_deployment" {
       }
 
       spec {
+        termination_grace_period_seconds = 30
+
         container {
           name              = "app"
           image             = "901371017570.dkr.ecr.ap-northeast-2.amazonaws.com/ph-petclinic-common-ecr-1:latest"
 
           liveness_probe {
             http_get {
-              path = "/"
+              path = "/healthcheck"
               port = 8080
             }
             
-            failure_threshold = 5
+            failure_threshold = 2
             initial_delay_seconds = 30
-            period_seconds        = 5
-          }
-
-          volume_mount {
-            name = "ph-petclinic-log-volume"
-            mount_path = "/var/log/container"
+            period_seconds        = 10
           }
         }
+      }
+    }
 
-        container {
-          name = "log-fetcher"
-          image = "public.ecr.aws/docker/library/busybox:1.35.0"
-          tty = true
-          args = [ "/bin/bash", "-c", "'sleep 60 && tail -n+1 -f /logs/app.log'" ]
-
-          volume_mount {
-            name = "ph-petclinic-log-volume"
-            mount_path = "/logs"
-          }
-        } 
-
-        volume {
-          name = "ph-petclinic-log-volume"
-          empty_dir {
-            
-          }
-        }
+    strategy {
+      rolling_update {
+        max_unavailable = 1
+        max_surge = 0
       }
     }
   }
